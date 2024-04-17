@@ -1,63 +1,12 @@
+import os
 import sys
 import matplotlib
+from Ui_Dialog import Ui_Dialog
+from MyFigure import MyFigure, MyFigure3d, MyFigurePolar
 matplotlib.use("Qt5Agg")
-
-from PyQt5.QtWidgets import QApplication, QLabel, QPushButton, QTableWidget, QDialog, QFileDialog, QGridLayout
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-from matplotlib.figure import Figure
-from PyQt5 import QtCore, QtWidgets
+from PyQt5.QtWidgets import QApplication, QLabel, QPushButton, QTableWidget, QDialog, QFileDialog, QGridLayout, \
+    QMessageBox
 from functions import *
-
-class Ui_Dialog(object):
-    def setupUi(self, Dialog):
-        Dialog.setObjectName("Dialog")
-        Dialog.resize(720, 515)
-        self.buttonBox = QtWidgets.QDialogButtonBox(Dialog)
-        self.buttonBox.setGeometry(QtCore.QRect(1500, 530, 341, 32))
-        self.buttonBox.setOrientation(QtCore.Qt.Horizontal)
-        self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel)
-        self.buttonBox.setObjectName("buttonBox")
-        self.widget = QtWidgets.QWidget(Dialog)
-        self.widget.setGeometry(QtCore.QRect(20, 10, 1850, 520))
-        self.widget.setObjectName("widget")
-        self.groupBox = QtWidgets.QGroupBox(self.widget)
-        self.groupBox.setGeometry(QtCore.QRect(0, 0, 1850, 520))
-        self.groupBox.setObjectName("groupBox")
-
-        self.retranslateUi(Dialog)
-        self.buttonBox.accepted.connect(Dialog.accept)
-        self.buttonBox.rejected.connect(Dialog.reject)
-        QtCore.QMetaObject.connectSlotsByName(Dialog)
-
-    def retranslateUi(self, Dialog):
-        _translate = QtCore.QCoreApplication.translate
-        Dialog.setWindowTitle(_translate("Dialog", "Dialog"))
-        self.groupBox.setTitle(_translate("Dialog", "Графическое отображение"))
-class MyFigure(FigureCanvas):
-
-    def __init__(self,width=5, height=4, dpi=100):
-
-        self.fig = Figure(figsize=(width, height), dpi=dpi)
-        super(MyFigure,self).__init__(self.fig)
-        self.axes = self.fig.add_subplot(111)
-
-class MyFigurePolar(FigureCanvas):
-
-    def __init__(self,width=5, height=4, dpi=100):
-
-        self.fig = Figure(figsize=(width, height), dpi=dpi)
-        super(MyFigurePolar,self).__init__(self.fig)
-        self.axes = self.fig.add_subplot(111, projection = 'polar')
-
-class MyFigure3d(FigureCanvas):
-
-    def __init__(self,width=5, height=4, dpi=100):
-
-        self.fig = Figure(figsize=(width, height), dpi=dpi)
-        super(MyFigure3d,self).__init__(self.fig)
-        self.axes = self.fig.add_subplot(111, projection='3d')
-
-
 class App(QDialog, Ui_Dialog):
 
     def __init__(self):
@@ -73,32 +22,35 @@ class App(QDialog, Ui_Dialog):
         self.height = 900
         self.Pixmap()
         self.file = dict() #data
-        self.anim = None
 
-    def anim_xy(self):
-        data = self.file
+    def anim_2d(self):
         F = MyFigurePolar(width=3, height=2, dpi=100)
-        F.axes.set_xlabel("X")
-        F.axes.set_ylabel("Y")
         F.axes.grid(True)
+        r = 5
+        period = np.pi / 64
+        sector = F.axes.fill_between([], [], [], alpha=0.5)
+
+        data = self.file
         F.trajectory = np.array(data['trajectory'])
-        F.fig.suptitle("xy")
         points = make_points_between(data['trajectory']).T
 
-        def update(num, points, ln):
-            ln.set_data(np.arctan2(points[0, :num], points[1, :num]),
-                        np.sqrt(points[0, :num] ** 2 + points[1, :num] ** 2))
-            return ln,
+        def update(frame):
+            F.axes.clear()
+            theta = np.linspace(0, 2 * np.pi, 100)
+            F.axes.set_theta_zero_location("N")
+            F.axes.set_theta_direction(-1)
+            F.axes.plot(theta, np.ones(100) * r, linestyle='-', color='black')
+            start = frame * np.pi / 180
+            end = start - period
+            sector = F.axes.fill_between([start, end], 0, r, alpha=0.5)
+            F.axes.set_yticklabels([])
+            return sector,
 
-        ln, = F.axes.plot(np.arctan2(points[0, 0:1], points[1, 0:1]),
-                          np.sqrt(points[0, 0:1] ** 2 + points[1, 0:1] ** 2))
+        self.anim = FuncAnimation(F.fig, update, frames=360, interval=15, blit=True)
 
-        F.axes.set_ylim([np.min(points[1, :]), np.max(points[1, :])])
-
-        self.anim = FuncAnimation(F.fig, update, len(points[0]), fargs=(points, ln), interval = 10,
-                                  blit=True)
 
         return F
+
 
     def anim_3d(self):
         data = self.file
@@ -153,20 +105,26 @@ class App(QDialog, Ui_Dialog):
         return F2
 
     def myfunc(self):
-        F = self.anim_xy()
+        F = self.anim_2d()
         F1 = self.anim_3d()
         F2 = self.anim_hd()
+
 
         self.gridlayout = QGridLayout(self.groupBox)
         self.gridlayout.addWidget(F, 0, 1)
         self.gridlayout.addWidget(F1, 0, 2)
         self.gridlayout.addWidget(F2, 0, 3)
+
     def Pixmap(self):
 
         self.setWindowTitle(self.title)
         self.setGeometry(self.left, self.top, self.width, self.height)
 
         self.Buttons()
+        self.Buttons_1()
+        self.Buttons_2()
+        self.Buttons_3()
+        self.Buttons_4()
         self.Presentashion()
         self.DataTable()
         self.show()
@@ -176,48 +134,77 @@ class App(QDialog, Ui_Dialog):
         label2.setText("Цель обнаружена!")
         label2.setGeometry(300, 400, 200, 50)
     def open_file(self):
-        filename, _ = QFileDialog.getOpenFileName(self, "Open File", ".", "JSON Files (*.json);;All Files (*)")
-        try:
-            if filename:
-                with open(filename, 'r') as file:
-                    contents = file.read()
-            self.file = json.loads(contents)
-        except:
-            print("НЕПРАВИЛЬНЫЙ ФОРМАТ JSON!!!")
+        self.file, _ = QFileDialog.getOpenFileName(self, "Open File", ".", "JSON Files (*.json);;All Files (*)")
+        self.root = os.path.join(self.file)
+        if self.file:
+            try:
+                with open(self.file, 'r') as self.filename:
+                    contents = self.filename.read()
+                    self.file = json.loads(contents)
+                    self.pybutton1.setEnabled(True)
+            except json.JSONDecodeError:
+                self.handleButton()
 
     def save_file(self):
         filename, _ = QFileDialog.getSaveFileName(self, "Save File", ".", "JSON Files (*.json);;All Files (*)")
-        if filename:
-            with open(filename, 'w') as file:
-                file.write("filename")
+        with open(filename, 'w') as file:
+            file.write("filename")
+
     def print_file(self):
+        self.pybutton3.setEnabled(True)
         self.myfunc()
         self.Label()
+    def handleButton(self):
+        QMessageBox.information(None, 'Сообщение от программы', "Неверный формат файла JSON.")
     def Buttons(self):
-        pybutton = QPushButton('ОТКРЫТЬ', self)
-        pybutton.resize(85, 60)
-        pybutton.move(120, 600)
-        pybutton.clicked.connect(self.open_file)
+        self.pybutton = QPushButton('ОТКРЫТЬ', self)
+        self.pybutton.resize(85, 60)
+        self.pybutton.move(120, 600)
+        self.pybutton.clicked.connect(self.open_file)
 
-        pybutton1 = QPushButton('СТАРТ', self)
-        pybutton1.clicked.connect(self.print_file)
-        pybutton1.resize(85, 60)
-        pybutton1.move(215, 600)
+    def Buttons_1(self):
+        self.pybutton1 = QPushButton('СТАРТ', self)
+        self.pybutton1.resize(85, 60)
+        self.pybutton1.move(215, 600)
+        self.pybutton1.setEnabled(False)
+        self.pybutton1.clicked.connect(self.print_file)
 
-        pybutton2 = QPushButton('ПЕРЕХВАТ', self)
-        pybutton2.clicked.connect(self.clickMethod)
-        pybutton2.resize(85, 60)
-        pybutton2.move(310, 600)
+    def Buttons_2(self):
+        self.pybutton2 = QPushButton('ПЕРЕХВАТ', self)
+        self.pybutton2.clicked.connect(self.clickMethod)
+        self.pybutton2.resize(85, 60)
+        self.pybutton2.move(310, 600)
 
-        pybutton3 = QPushButton('МЕТОД: ТТ', self)
-        pybutton3.clicked.connect(self.clickMethod)
-        pybutton3.resize(85, 60)
-        pybutton3.move(405, 600)
+    def Buttons_3(self):
+        self.pybutton3 = QPushButton('МЕТОД: ТТ', self)
+        self.pybutton3.resize(85, 60)
+        self.pybutton3.move(405, 600)
+        self.pybutton3.setEnabled(False)
+        self.pybutton3.clicked.connect(self.clickMethod)
+        self.pybutton3.clicked.connect(self.changeName)
 
-        pybutton4 = QPushButton('ПРЕРВАТЬ', self)
-        pybutton4.clicked.connect(self.clickMethod)
-        pybutton4.resize(85, 60)
-        pybutton4.move(500, 600)
+    def changeName(self):
+        current_text = self.pybutton3.text()
+        if current_text == 'МЕТОД: ТТ':
+            self.pybutton3.setText('МЕТОД:\nСПРЯМ')
+        if current_text == 'МЕТОД:\nСПРЯМ':
+            self.pybutton3.setText('МЕТОД: ТТ')
+
+    def Buttons_4(self):
+        self.pybutton4 = QPushButton('ПРЕРВАТЬ', self)
+        self.pybutton4.clicked.connect(self.clickMethod)
+        self.pybutton4.clicked.connect(self.close_filename)
+        self.pybutton4.resize(85, 60)
+        self.pybutton4.move(500, 600)
+
+    def close_filename(self):
+        try:
+            if hasattr(self, 'filename') and self.filename:
+                self.filename.close()
+                QMessageBox.information(self, "Удаление файла", "Файл JSON успешно удален.")
+        except Exception as e:
+            QMessageBox.information(self, "Удаление файла", f"Не удалось удалить файл: {str(e)}")
+
     def clickMethod(self):
         print('Button pressed in PyQt application.')
     def DataTable(self):
