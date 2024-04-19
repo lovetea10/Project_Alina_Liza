@@ -53,7 +53,7 @@ def show_sphere_side_left_right(center_cords, radius, border_angles, angle, ax):
     y = center_cords[1] + rad * np.cos(psi) * np.sin(angle)
     z = center_cords[2] + rad * np.sin(psi)
 
-    ax.plot_surface(x, y, z, color='b', alpha=0.7)
+    ax.plot_surface(x, y, z, color='r', alpha=0.7)
 
 
 def show_sphere_side_up_down(center_cords, radius, border_angles, angle, ax):
@@ -65,7 +65,7 @@ def show_sphere_side_up_down(center_cords, radius, border_angles, angle, ax):
     y = center_cords[1] + rad * np.cos(angle) * np.sin(psi)
     z = center_cords[2] + rad * np.sin(angle)
 
-    ax.plot_surface(x, y, z, color='b', alpha=0.7)
+    ax.plot_surface(x, y, z, color='r', alpha=0.7)
 
 
 def show_sphere_sector_and_point(point_cords, center_cords, radius, place_angles, asimuths):
@@ -91,7 +91,7 @@ def show_sphere_sector_and_point(point_cords, center_cords, radius, place_angles
 
     show_sphere_side_up_down(center_cords, radius, place_angles, asimuths[1], ax)
 
-    ax.plot_surface(x, y, z, color='b', alpha=0.7)
+    ax.plot_surface(x, y, z, color='r', alpha=0.7)
 
     ax.scatter(point_cords[0], point_cords[1], point_cords[2], color='r')
     # Настройка осей и масштаба
