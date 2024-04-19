@@ -5,12 +5,13 @@ from Ui_Dialog import Ui_Dialog
 from MyFigure import MyFigure, MyFigure3d, MyFigurePolar
 matplotlib.use("Qt5Agg")
 from PyQt5.QtWidgets import QApplication, QLabel, QPushButton, QTableWidget, QDialog, QFileDialog, QGridLayout, \
-    QMessageBox
+    QMessageBox, QVBoxLayout
 from functions import *
 class App(QDialog, Ui_Dialog):
 
     def __init__(self):
         super(App, self).__init__()
+        self.anim = None
         self.anim1 = None
         self.anim2 = None
         self.setupUi(self)
@@ -22,34 +23,43 @@ class App(QDialog, Ui_Dialog):
         self.height = 900
         self.Pixmap()
         self.file = dict() #data
+    def initUI_anim(self):
+        self.figure_canvas = MyFigurePolar()
+        self.anim_2d()
+        self.anim_sector()
+        self.show()
+        return self.figure_canvas
 
     def anim_2d(self):
-        F = MyFigurePolar(width=3, height=2, dpi=100)
-        F.axes.grid(True)
-        r = 5
-        period = np.pi / 64
-        sector = F.axes.fill_between([], [], [], alpha=0.5)
-
         data = self.file
-        F.trajectory = np.array(data['trajectory'])
         points = make_points_between(data['trajectory']).T
+        self.ln, = self.figure_canvas.axes.plot(np.arctan2(points[0, 0:1], points[1, 0:1]),
+                                                np.sqrt(points[0, 0:1] ** 2 + points[1, 0:1] ** 2))
 
-        def update(frame):
-            F.axes.clear()
-            theta = np.linspace(0, 2 * np.pi, 100)
-            F.axes.set_theta_zero_location("N")
-            F.axes.set_theta_direction(-1)
-            F.axes.plot(theta, np.ones(100) * r, linestyle='-', color='black')
-            start = frame * np.pi / 180
-            end = start - period
-            sector = F.axes.fill_between([start, end], 0, r, alpha=0.5)
-            F.axes.set_yticklabels([])
-            return sector,
+        def update(num):
+            self.ln.set_data(np.arctan2(points[0, :num], points[1, :num]),
+                             np.sqrt(points[0, :num] ** 2 + points[1, :num] ** 2))
+            self.update_sector(num)
+            return self.ln,
 
-        self.anim = FuncAnimation(F.fig, update, frames=360, interval=15, blit=True)
+        self.anim = FuncAnimation(self.figure_canvas.fig, update, frames=len(points[0]),
+                                  interval=10000 / len(points[0]))
 
+    def update_sector(self, frame):
+        r = 6
+        period = np.pi / 32
+        self.sector.remove() if hasattr(self, 'sector') else None
+        self.figure_canvas.axes.set_theta_zero_location("N")
+        self.figure_canvas.axes.set_theta_direction(-1)
+        start = frame * np.pi / 180
+        end = start - period
+        self.figure_canvas.axes.set_yticklabels([5000, 10000, 15000, 20000, 25000])
+        self.sector = self.figure_canvas.axes.fill_between([start, end], 0, r, alpha=0.5, facecolor='red')
+        self.figure_canvas.draw()
 
-        return F
+    def anim_sector(self):
+        self.anim0 = FuncAnimation(self.figure_canvas.fig, self.update_sector, frames=360, interval=15)
+
 
     def anim_3d(self):
         data = self.file
@@ -89,7 +99,7 @@ class App(QDialog, Ui_Dialog):
 
         show_sphere_side_up_down(center_cords, radius, place_angles, asimuths[1], ax)
 
-        ax.plot_surface(x, y, z, color='b', alpha=0.7)
+        ax.plot_surface(x, y, z, color='r', alpha=0.7)
 
         def update(frame, points, max_frame):
             ax.cla()
@@ -123,7 +133,7 @@ class App(QDialog, Ui_Dialog):
 
             show_sphere_side_up_down(center_cords, radius, place_angles, asimuths[1], ax)
 
-            ax.plot_surface(x, y, z, color='b', alpha=0.7)
+            ax.plot_surface(x, y, z, color='r', alpha=0.7)
             return ax
 
         self.anim1 = FuncAnimation(fig=fig, func=update, frames=len(points[0]), fargs=(points, 180), interval=10,
@@ -155,13 +165,13 @@ class App(QDialog, Ui_Dialog):
         return F2
 
     def myfunc(self):
-        F = self.anim_2d()
+        F0 = self.initUI_anim()
         F1 = self.anim_3d()
         F2 = self.anim_hd()
 
 
         self.gridlayout = QGridLayout(self.groupBox)
-        self.gridlayout.addWidget(F, 0, 1)
+        self.gridlayout.addWidget(F0, 0, 1)
         self.gridlayout.addWidget(F1, 0, 2)
         self.gridlayout.addWidget(F2, 0, 3)
 
