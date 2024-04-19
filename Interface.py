@@ -51,34 +51,84 @@ class App(QDialog, Ui_Dialog):
 
         return F
 
-
     def anim_3d(self):
         data = self.file
-        F1 = MyFigure3d(width=5, height=4, dpi=100)
-        F1.axes.grid(True)
-        F1.trajectory = np.array(data['trajectory'])
-        F1.fig.suptitle("3d-Plot")
+        radius = 1000
+        center_cords = [0, 0, 0]
+        place_angles = [0, np.deg2rad(40)]
+        asimuths = [0, np.deg2rad(40)]
+        delta = np.pi / 180
+
+        fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
+        fig.suptitle("3d-Plot")
+
         points = make_points_between(data['trajectory']).T
 
-        def update1(num, points, ln):
-            ln.set_data(points[:2, :num])
-            ln.set_3d_properties(points[2, :num])
-            return ln,
+        ax.disable_mouse_rotation()
+        ax.set_xlim3d([-radius, radius])
+        ax.set_ylim3d([-radius, radius])
+        ax.set_zlim3d([-radius, radius])
+        # Определяем углы theta и phi для создания шарового сектора
+        theta = np.linspace(place_angles[0], place_angles[1], 20)
+        phi = np.linspace(asimuths[0], asimuths[1], 20)
+        # radius = np.linspace(0, max_radius, 100)
 
-        ln, = F1.axes.plot(points[0, 0:1], points[1, 0:1], points[2, :1])
-        F1.axes.set_xlim3d([np.min(points[0, :]), np.max(points[0, :])])
-        F1.axes.set_xlabel('X')
+        # Создаем сетку из углов для шарового сектора
+        T, P = np.meshgrid(theta, phi)
 
-        F1.axes.set_ylim3d([np.min(points[1, :]), np.max(points[1, :])])
-        F1.axes.set_ylabel('Y')
+        # Вычисляем координаты точек на поверхности шарового сектора
+        x = center_cords[0] + radius * np.cos(P) * np.cos(T)
+        y = center_cords[1] + radius * np.cos(P) * np.sin(T)
+        z = center_cords[2] + radius * np.sin(P)
 
-        F1.axes.set_zlim3d([np.min(points[2, :]), np.max(points[2, :])])
-        F1.axes.set_zlabel('Z')
+        show_sphere_side_left_right(center_cords, radius, asimuths, place_angles[0], ax)
 
-        self.anim1 = FuncAnimation(F1.fig, update1, len(points[0]), fargs=(points, ln), interval = 10,
-                            blit=True)
+        show_sphere_side_left_right(center_cords, radius, asimuths, place_angles[1], ax)
 
-        return F1
+        show_sphere_side_up_down(center_cords, radius, place_angles, asimuths[0], ax)
+
+        show_sphere_side_up_down(center_cords, radius, place_angles, asimuths[1], ax)
+
+        ax.plot_surface(x, y, z, color='b', alpha=0.7)
+
+        def update(frame, points, max_frame):
+            ax.cla()
+            ax.set_xlim3d([-radius, radius])
+            ax.set_ylim3d([-radius, radius])
+            ax.set_zlim3d([-radius, radius])
+
+            ax.plot(points[0, :frame], points[1, :frame], points[2, :frame])
+
+            place_angles[0] += delta
+            place_angles[1] += delta
+
+            # Определяем углы theta и phi для создания шарового сектора
+            theta = np.linspace(place_angles[0], place_angles[1], 20)
+            phi = np.linspace(asimuths[0], asimuths[1], 20)
+            # radius = np.linspace(0, max_radius, 100)
+
+            # Создаем сетку из углов для шарового сектора
+            T, P = np.meshgrid(theta, phi)
+
+            # Вычисля   ем координаты точек на поверхности шарового сектора
+            x = center_cords[0] + radius * np.cos(P) * np.cos(T)
+            y = center_cords[1] + radius * np.cos(P) * np.sin(T)
+            z = center_cords[2] + radius * np.sin(P)
+
+            show_sphere_side_left_right(center_cords, radius, asimuths, place_angles[0], ax)
+
+            show_sphere_side_left_right(center_cords, radius, asimuths, place_angles[1], ax)
+
+            show_sphere_side_up_down(center_cords, radius, place_angles, asimuths[0], ax)
+
+            show_sphere_side_up_down(center_cords, radius, place_angles, asimuths[1], ax)
+
+            ax.plot_surface(x, y, z, color='b', alpha=0.7)
+            return ax
+
+        self.anim1 = FuncAnimation(fig=fig, func=update, frames=len(points[0]), fargs=(points, 180), interval=10,
+                                   blit=False)
+        return MyFigure3d(fig=fig, ax=ax)
 
     def anim_hd(self):
         data = self.file
