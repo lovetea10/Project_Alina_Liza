@@ -60,7 +60,6 @@ class App(QDialog, Ui_Dialog):
     def anim_sector(self):
         self.anim0 = FuncAnimation(self.figure_canvas.fig, self.update_sector, frames=360, interval=15)
 
-
     def anim_3d(self):
         data = self.file
         radius = 1000
@@ -105,7 +104,7 @@ class App(QDialog, Ui_Dialog):
             ax.cla()
             ax.set_xlim3d([-radius, radius])
             ax.set_ylim3d([-radius, radius])
-            ax.set_zlim3d([-radius, radius])
+            ax.set_zlim3d([0, radius])
 
             ax.plot(points[0, :frame], points[1, :frame], points[2, :frame])
 

@@ -5,13 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="1e538c84-91e0-4dd9-8bcf-1a481803dcb7" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/Check3.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Check.py" beforeDir="false" afterPath="$PROJECT_DIR$/Check.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Check1.py" beforeDir="false" afterPath="$PROJECT_DIR$/Check1.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Interface.py" beforeDir="false" afterPath="$PROJECT_DIR$/Interface.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/MyFigure.py" beforeDir="false" afterPath="$PROJECT_DIR$/MyFigure.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/functions.py" beforeDir="false" afterPath="$PROJECT_DIR$/functions.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -37,14 +32,14 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "RunOnceActivity.OpenProjectViewOnStart": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "git-widget-placeholder": "master",
-    "last_opened_file_path": "C:/Users/Алина/Desktop/ИВТ/Test/Interface.py"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/Алина/Desktop/ИВТ/Test/Interface.py&quot;
   }
-}]]></component>
+}</component>
   <component name="RunManager">
     <configuration name="Check1" type="PythonConfigurationType" factoryName="Python" nameIsGenerated="true">
       <module name="Test" />
